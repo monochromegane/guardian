@@ -1,9 +1,11 @@
 package main
 
 import (
-	"fmt"
+	"os"
+
+	"github.com/monochromegane/guardian"
 )
 
 func main() {
-	fmt.Printf("Hello, world\n")
+	os.Exit(guardian.Run(os.Args[1:]))
 }
