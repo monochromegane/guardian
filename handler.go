@@ -6,10 +6,11 @@ import (
 	"strings"
 
 	shellwords "github.com/mattn/go-shellwords"
+	fsnotify "gopkg.in/fsnotify.v1"
 )
 
 type handler interface {
-	run(string) ([]byte, error)
+	run(fsnotify.Event) ([]byte, error)
 }
 
 func newCommand(script string) handler {
@@ -23,8 +24,8 @@ type command struct {
 	script string
 }
 
-func (cmd *command) run(path string) ([]byte, error) {
-	c, err := shellwords.Parse(strings.Replace(cmd.script, "%p", path, -1))
+func (cmd *command) run(event fsnotify.Event) ([]byte, error) {
+	c, err := shellwords.Parse(cmd.replaceBy(event))
 	if err != nil {
 		return nil, err
 	}
@@ -39,9 +40,14 @@ func (cmd *command) run(path string) ([]byte, error) {
 	}
 }
 
+func (cmd *command) replaceBy(event fsnotify.Event) string {
+	script := strings.Replace(cmd.script, "%p", event.Name, -1)
+	return strings.Replace(script, "%e", event.Op.String(), -1)
+}
+
 type noOpCommand struct {
 }
 
-func (cmd *noOpCommand) run(path string) ([]byte, error) {
+func (cmd *noOpCommand) run(event fsnotify.Event) ([]byte, error) {
 	return nil, nil
 }

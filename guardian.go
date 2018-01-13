@@ -76,7 +76,7 @@ func (g *guardian) run() error {
 					g.logger.Println(event)
 				}
 				if handle, ok := g.handlers[event.Op]; ok {
-					out, err := handle.run(event.Name)
+					out, err := handle.run(event)
 					if err != nil {
 						g.logger.Println(err)
 					} else {
