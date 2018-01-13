@@ -23,7 +23,7 @@ func Run(args []string) int {
 }
 
 type guardian struct {
-	path     string
+	paths    []string
 	handlers map[fsnotify.Op]handler
 	logger   *log.Logger
 	verbose  bool
@@ -89,9 +89,11 @@ func (g *guardian) run() error {
 		}
 	}()
 
-	err = watcher.AddRecursive(g.path)
-	if err != nil {
-		return err
+	for _, path := range g.paths {
+		err = watcher.AddRecursive(path)
+		if err != nil {
+			return err
+		}
 	}
 	<-done
 	return nil

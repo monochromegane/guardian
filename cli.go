@@ -22,7 +22,6 @@ func (c *cli) run(args []string) error {
 
 func (c *cli) parseArgs(args []string) (*guardian, error) {
 	g := newGuardian()
-	flag.StringVar(&g.path, "p", "", "path")
 
 	var out string
 	flag.StringVar(&out, "o", "", "Output file path.")
@@ -36,6 +35,8 @@ func (c *cli) parseArgs(args []string) (*guardian, error) {
 
 	flag.BoolVar(&g.verbose, "v", false, "Run as verbose.")
 	flag.Parse()
+
+	g.paths = flag.Args()
 
 	g.registerHandler(fsnotify.Create, newCommand(create))
 	g.registerHandler(fsnotify.Write, newCommand(write))
