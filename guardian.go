@@ -1,7 +1,6 @@
 package guardian
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/fsnotify/fsnotify"
@@ -21,7 +20,21 @@ func Run(args []string) int {
 }
 
 type guardian struct {
-	path string
+	path     string
+	handlers map[fsnotify.Op]handler
+}
+
+func newGuardian() *guardian {
+	return &guardian{
+		handlers: map[fsnotify.Op]handler{},
+	}
+}
+
+func (g *guardian) RegisterHandler(op fsnotify.Op, hdl handler) {
+	if _, ok := hdl.(*noOpCommand); ok {
+		return
+	}
+	g.handlers[op] = hdl
 }
 
 func (g *guardian) run() error {
@@ -36,9 +49,10 @@ func (g *guardian) run() error {
 		for {
 			select {
 			case event := <-watcher.Events:
-				fmt.Println("event:", event)
-			case err := <-watcher.Errors:
-				fmt.Println("error:", err)
+				if handle, ok := g.handlers[event.Op]; ok {
+					handle.run(event.Name)
+				}
+			case <-watcher.Errors:
 			}
 		}
 	}()
