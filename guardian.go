@@ -27,12 +27,14 @@ type guardian struct {
 	handlers map[fsnotify.Op]handler
 	logger   *log.Logger
 	verbose  bool
+	wait     chan struct{}
 }
 
 func newGuardian() *guardian {
 	return &guardian{
 		handlers: map[fsnotify.Op]handler{},
 		logger:   newLogger(os.Stdout),
+		wait:     make(chan struct{}),
 	}
 }
 
@@ -67,7 +69,6 @@ func (g *guardian) run() error {
 	}
 	defer watcher.Close()
 
-	done := make(chan bool)
 	go func() {
 		for {
 			select {
@@ -95,6 +96,10 @@ func (g *guardian) run() error {
 			return err
 		}
 	}
-	<-done
+	<-g.wait
 	return nil
+}
+
+func (g *guardian) stop() {
+	g.wait <- struct{}{}
 }
