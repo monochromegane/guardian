@@ -1,6 +1,8 @@
 package guardian
 
 import (
+	"io"
+	"log"
 	"os"
 
 	"github.com/fsnotify/fsnotify"
@@ -22,19 +24,38 @@ func Run(args []string) int {
 type guardian struct {
 	path     string
 	handlers map[fsnotify.Op]handler
+	logger   *log.Logger
 }
 
 func newGuardian() *guardian {
 	return &guardian{
 		handlers: map[fsnotify.Op]handler{},
+		logger:   newLogger(os.Stdout),
 	}
 }
 
-func (g *guardian) RegisterHandler(op fsnotify.Op, hdl handler) {
+func newLogger(out io.Writer) *log.Logger {
+	return log.New(out, "[Guardian] ", log.LstdFlags)
+}
+
+func (g *guardian) registerHandler(op fsnotify.Op, hdl handler) {
 	if _, ok := hdl.(*noOpCommand); ok {
 		return
 	}
 	g.handlers[op] = hdl
+}
+
+func (g *guardian) setOutput(path string) error {
+	if path == "" {
+		g.logger = newLogger(os.Stdout)
+		return nil
+	}
+	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
+	if err != nil {
+		return err
+	}
+	g.logger = newLogger(file)
+	return nil
 }
 
 func (g *guardian) run() error {
@@ -50,9 +71,15 @@ func (g *guardian) run() error {
 			select {
 			case event := <-watcher.Events:
 				if handle, ok := g.handlers[event.Op]; ok {
-					handle.run(event.Name)
+					out, err := handle.run(event.Name)
+					if err != nil {
+						g.logger.Println(err)
+					} else {
+						g.logger.Printf("%s", out)
+					}
 				}
-			case <-watcher.Errors:
+			case err := <-watcher.Errors:
+				g.logger.Println(err)
 			}
 		}
 	}()

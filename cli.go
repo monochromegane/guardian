@@ -24,6 +24,9 @@ func (c *cli) parseArgs(args []string) (*guardian, error) {
 	g := newGuardian()
 	flag.StringVar(&g.path, "p", "", "path")
 
+	var out string
+	flag.StringVar(&out, "o", "", "Output file path.")
+
 	var create, write, remove, rename, chmod string
 	flag.StringVar(&create, "create", "", "handler after create operation.")
 	flag.StringVar(&write, "write", "", "handler after write operation.")
@@ -32,10 +35,14 @@ func (c *cli) parseArgs(args []string) (*guardian, error) {
 	flag.StringVar(&chmod, "chmod", "", "handler after chmod operation.")
 	flag.Parse()
 
-	g.RegisterHandler(fsnotify.Create, newCommand(create))
-	g.RegisterHandler(fsnotify.Write, newCommand(write))
-	g.RegisterHandler(fsnotify.Remove, newCommand(remove))
-	g.RegisterHandler(fsnotify.Rename, newCommand(rename))
-	g.RegisterHandler(fsnotify.Chmod, newCommand(chmod))
+	g.registerHandler(fsnotify.Create, newCommand(create))
+	g.registerHandler(fsnotify.Write, newCommand(write))
+	g.registerHandler(fsnotify.Remove, newCommand(remove))
+	g.registerHandler(fsnotify.Rename, newCommand(rename))
+	g.registerHandler(fsnotify.Chmod, newCommand(chmod))
+	err := g.setOutput(out)
+	if err != nil {
+		return nil, err
+	}
 	return g, nil
 }
