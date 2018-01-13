@@ -4,7 +4,7 @@ import (
 	"flag"
 	"io"
 
-	"github.com/fsnotify/fsnotify"
+	"gopkg.in/fsnotify.v1"
 )
 
 type cli struct {

@@ -5,7 +5,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/fsnotify/fsnotify"
+	"github.com/farmergreg/rfsnotify"
+	"gopkg.in/fsnotify.v1"
 )
 
 const (
@@ -59,7 +60,7 @@ func (g *guardian) setOutput(path string) error {
 }
 
 func (g *guardian) run() error {
-	watcher, err := fsnotify.NewWatcher()
+	watcher, err := rfsnotify.NewWatcher()
 	if err != nil {
 		return err
 	}
@@ -84,7 +85,7 @@ func (g *guardian) run() error {
 		}
 	}()
 
-	err = watcher.Add(g.path)
+	err = watcher.AddRecursive(g.path)
 	if err != nil {
 		return err
 	}
