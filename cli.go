@@ -33,6 +33,8 @@ func (c *cli) parseArgs(args []string) (*guardian, error) {
 	flag.StringVar(&remove, "remove", "", "handler after remove operation.")
 	flag.StringVar(&rename, "rename", "", "handler after rename operation.")
 	flag.StringVar(&chmod, "chmod", "", "handler after chmod operation.")
+
+	flag.BoolVar(&g.verbose, "v", false, "Run as verbose.")
 	flag.Parse()
 
 	g.registerHandler(fsnotify.Create, newCommand(create))

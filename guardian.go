@@ -26,6 +26,7 @@ type guardian struct {
 	path     string
 	handlers map[fsnotify.Op]handler
 	logger   *log.Logger
+	verbose  bool
 }
 
 func newGuardian() *guardian {
@@ -71,6 +72,9 @@ func (g *guardian) run() error {
 		for {
 			select {
 			case event := <-watcher.Events:
+				if g.verbose {
+					g.logger.Println(event)
+				}
 				if handle, ok := g.handlers[event.Op]; ok {
 					out, err := handle.run(event.Name)
 					if err != nil {
